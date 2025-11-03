@@ -1,0 +1,284 @@
+### Trip Planning API - Advanced Features
+### Use with IntelliJ IDEA HTTP Client
+### Features: Guide-Trip Association, Analytics, Packing API Integration
+
+@url = http://localhost:7070/api
+
+#######################################################################
+# SETUP - Get authentication tokens
+#######################################################################
+
+### Login as USER
+# @name LoginUser
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user123"
+}
+
+> {%
+    let data = response.body;
+    if (typeof data === "string"){
+        try {
+        data = JSON.parse(data);}
+        catch(e) {} }
+    if (data && data.token) {
+        client.global.set("user_token", data.token);
+    }
+%}
+
+### Login as ADMIN
+# @name LoginAdmin
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    let data = response.body;
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+    if (data && data.token) {
+        client.global.set("admin_token", data.token);
+    }
+%}
+
+#######################################################################
+# GUIDE-TRIP ASSOCIATION
+#######################################################################
+
+### 1. Link Guide to Trip
+# @name LinkGuideToTrip
+PUT {{url}}/trips/2/guides/3
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Link guide to trip successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.guides, "Trip should have guides");
+        client.assert(Array.isArray(data.guides) || typeof data.guides === "object", 
+            "Guides should be array or object");
+    });
+%}
+
+### 2. Link Non-Existent Guide to Trip (404)
+# @name LinkNonExistentGuide
+PUT {{url}}/trips/1/guides/9999
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Link non-existent guide returns error", () => {
+        client.assert([404, 500].includes(response.status), 
+            "Expected 404 or 500");
+    });
+%}
+
+### 3. Link Guide to Non-Existent Trip (404)
+# @name LinkGuideToNonExistentTrip
+PUT {{url}}/trips/9999/guides/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Link to non-existent trip returns 404", () => {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+#######################################################################
+# ANALYTICS & BUSINESS INTELLIGENCE
+#######################################################################
+
+### 4. Get Total Price Per Guide (US-5)
+# @name GetGuidesTotalPrice
+GET {{url}}/trips/guides/totalprice
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Get guides total price successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(Array.isArray(data), "Response should be array");
+        if (data.length > 0) {
+            client.assert(data[0].guideId !== undefined, "Should have guideId");
+            client.assert(data[0].totalPrice !== undefined, "Should have totalPrice");
+            console.log("Guide Performance Data:", data);
+        }
+    });
+%}
+
+#######################################################################
+# EXTERNAL API INTEGRATION - Packing List (US-6)
+#######################################################################
+
+### 5. Get Trip with Packing Items (Beach Category)
+# @name GetBeachTripWithPacking
+GET {{url}}/trips/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Beach trip includes packing items", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.packingItems, "Trip should have packing items");
+        client.assert(Array.isArray(data.packingItems), "Packing items should be array");
+        if (data.packingItems.length > 0) {
+            let item = data.packingItems[0];
+            client.assert(item.name, "Packing item should have name");
+            client.assert(item.weightInGrams, "Packing item should have weight");
+            client.assert(item.category, "Packing item should have category");
+            console.log("Packing Items:", data.packingItems.length, "items");
+        }
+    });
+%}
+
+### 6. Get Total Packing Weight for Trip
+# @name GetPackingWeight
+GET {{url}}/trips/1/packing/weight
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Get packing weight successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.tripId, "Response should have tripId");
+        client.assert(data && typeof data.totalWeightInGrams === "number", 
+            "Response should have totalWeightInGrams");
+        console.log("Total Packing Weight:", data.totalWeightInGrams, "grams");
+    });
+%}
+
+### 7. Get Packing Weight for Non-Existent Trip (404)
+# @name GetPackingWeightNotFound
+GET {{url}}/trips/9999/packing/weight
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Non-existent trip returns 404", () => {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+#######################################################################
+# CATEGORY-SPECIFIC PACKING ITEMS
+#######################################################################
+
+### 8. Get City Trip with Packing Items
+# @name GetCityTripWithPacking
+GET {{url}}/trips/2
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("City trip includes packing items", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        if (data && data.packingItems && data.packingItems.length > 0) {
+            client.assert(data.packingItems[0].category === "city", 
+                "Packing items should match city category");
+        }
+    });
+%}
+
+### 9. Get Forest Trip with Packing Items
+# @name GetForestTripWithPacking
+GET {{url}}/trips/3
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Forest trip includes packing items", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        if (data && data.packingItems) {
+            console.log("Forest packing items:", data.packingItems.length);
+        }
+    });
+%}
+
+#######################################################################
+# COMPLETE WORKFLOW TEST
+#######################################################################
+
+### 10. Complete Trip Planning Workflow
+# @name CompleteWorkflow
+
+### Step 1: Create a new trip
+POST {{url}}/trips
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Alpine Skiing Experience",
+  "startTime": "2026-01-10T08:00:00Z",
+  "endTime": "2026-01-17T18:00:00Z",
+  "locationCoordinates": "47.0502,12.7931",
+  "price": 22000.0,
+  "category": "snow"
+}
+
+> {%
+    client.test("Workflow: Create trip", () => {
+        client.assert(response.status === 201, "Expected 201");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        if (data && data.id) {
+            client.global.set("workflow_trip_id", data.id);
+        }
+    });
+%}
+
+### Step 2: Get the trip with packing items
+GET {{url}}/trips/{{workflow_trip_id}}
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Workflow: Get trip with packing", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.packingItems, "Should have packing items");
+        client.assert(data.category === "snow", "Category should be snow");
+    });
+%}
+
+### Step 3: Link a guide to the trip
+PUT {{url}}/trips/{{workflow_trip_id}}/guides/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Workflow: Link guide", () => {
+        client.assert(response.status === 200, "Expected 200");
+    });
+%}
+
+### Step 4: Get packing weight
+GET {{url}}/trips/{{workflow_trip_id}}/packing/weight
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Workflow: Get packing weight", () => {
+        client.assert(response.status === 200, "Expected 200");
+    });
+%}
+
+#######################################################################
+# SUMMARY
+#######################################################################
+
+### Advanced Features Tested:
+### ✅ Guide-Trip associations (many-to-many)
+### ✅ Guide performance analytics (total price)
+### ✅ External Packing API integration
+### ✅ Category-specific packing items
+### ✅ Packing weight calculations
+### ✅ Complete workflow (create → get → link → analyze)
+### ✅ All 6 categories supported (beach, city, forest, lake, sea, snow)

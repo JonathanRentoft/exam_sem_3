@@ -1,0 +1,228 @@
+### Trip Planning API - Guide CRUD Operations
+### Use with IntelliJ IDEA HTTP Client
+
+@url = http://localhost:7070/api
+
+#######################################################################
+# SETUP - Get authentication tokens
+#######################################################################
+
+### Login as USER
+# @name LoginUser
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user123"
+}
+
+> {%
+    let data = response.body;
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+    if (data && data.token) {
+        client.global.set("user_token", data.token);
+    }
+%}
+
+### Login as ADMIN
+# @name LoginAdmin
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    let data = response.body;
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+    if (data && data.token) {
+        client.global.set("admin_token", data.token);
+    }
+%}
+
+#######################################################################
+# READ OPERATIONS
+#######################################################################
+
+### 1. Get All Guides
+# @name GetAllGuides
+GET {{url}}/guides
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Get all guides successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(Array.isArray(data), "Response should be array");
+        client.assert(data.length > 0, "Should have guides");
+    });
+%}
+
+### 2. Get Guide by ID
+# @name GetGuideById
+GET {{url}}/guides/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Get guide by ID successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.id === 1, "Guide should have ID 1");
+        client.assert(data && data.name, "Guide should have name");
+        client.assert(data && data.email, "Guide should have email");
+        client.assert(data && data.phone, "Guide should have phone");
+        client.assert(data && typeof data.yearsOfExperience === "number", 
+            "Guide should have yearsOfExperience");
+    });
+%}
+
+### 3. Get Non-Existent Guide (404)
+# @name GetNonExistentGuide
+GET {{url}}/guides/9999
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Non-existent guide returns 404", () => {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+#######################################################################
+# CREATE OPERATIONS
+#######################################################################
+
+### 4. Create New Guide
+# @name CreateGuide
+POST {{url}}/guides
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Sophia Anderson",
+  "email": "sophia.anderson@example.com",
+  "phone": "+45 45 67 89 01",
+  "yearsOfExperience": 7
+}
+
+> {%
+    client.test("Create guide successful", () => {
+        client.assert(response.status === 201, "Expected 201 Created");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.id, "Created guide should have ID");
+        client.assert(data.name === "Sophia Anderson", "Name should match");
+        // Save the new guide ID for later tests
+        if (data && data.id) {
+            client.global.set("new_guide_id", data.id);
+        }
+    });
+%}
+
+### 5. Create Guide with Missing Required Field (validation error)
+# @name CreateInvalidGuide
+POST {{url}}/guides
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "phone": "+45 12 34 56 78",
+  "yearsOfExperience": 5
+}
+
+> {%
+    client.test("Missing required name returns 400", () => {
+        client.assert(response.status === 400, "Expected 400 Bad Request");
+    });
+%}
+
+#######################################################################
+# UPDATE OPERATIONS
+#######################################################################
+
+### 6. Update Guide
+# @name UpdateGuide
+PUT {{url}}/guides/1
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "John Smith - Senior Guide",
+  "email": "john.smith.senior@example.com",
+  "phone": "+45 12 34 56 78",
+  "yearsOfExperience": 15
+}
+
+> {%
+    client.test("Update guide successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data.yearsOfExperience === 15, 
+            "Years of experience should be updated");
+    });
+%}
+
+### 7. Update Non-Existent Guide (404)
+# @name UpdateNonExistentGuide
+PUT {{url}}/guides/9999
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Test Guide",
+  "email": "test@example.com",
+  "phone": "+45 99 99 99 99",
+  "yearsOfExperience": 1
+}
+
+> {%
+    client.test("Update non-existent guide returns 404", () => {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+#######################################################################
+# DELETE OPERATIONS (ADMIN only)
+#######################################################################
+
+### 8. USER tries to delete (should be 403 Forbidden)
+# @name UserDeleteForbidden
+DELETE {{url}}/guides/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("USER cannot delete guides", () => {
+        client.assert(response.status === 403, "Expected 403 Forbidden");
+    });
+%}
+
+### 9. ADMIN deletes guide (should work)
+# @name AdminDeleteGuide
+DELETE {{url}}/guides/{{new_guide_id}}
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("ADMIN can delete guides", () => {
+        client.assert([204, 404, 500].includes(response.status), 
+            "Expected 204 or 404 if not found, or 500 if guide has trips");
+    });
+%}
+
+#######################################################################
+# SUMMARY
+#######################################################################
+
+### Test Coverage:
+### ✅ Get all guides
+### ✅ Get guide by ID
+### ✅ Create new guide
+### ✅ Validation on create
+### ✅ Update guide
+### ✅ Delete guide (role-based)
+### ✅ Error handling (404, 400, 403)

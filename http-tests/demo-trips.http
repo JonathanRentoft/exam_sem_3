@@ -1,0 +1,261 @@
+### Trip Planning API - Trip CRUD Operations
+### Use with IntelliJ IDEA HTTP Client
+### Run demo-authentication.http first to get tokens!
+
+@url = http://localhost:7070/api
+
+#######################################################################
+# SETUP - Get authentication tokens first
+#######################################################################
+
+### Login as USER to get token
+# @name LoginUser
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user123"
+}
+
+> {%
+    let data = response.body;
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+    if (data && data.token) {
+        client.global.set("user_token", data.token);
+    }
+%}
+
+### Login as ADMIN to get token
+# @name LoginAdmin
+POST {{url}}/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+> {%
+    let data = response.body;
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+    if (data && data.token) {
+        client.global.set("admin_token", data.token);
+    }
+%}
+
+#######################################################################
+# READ OPERATIONS
+#######################################################################
+
+### 1. Get All Trips
+# @name GetAllTrips
+GET {{url}}/trips
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Get all trips successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(Array.isArray(data), "Response should be array");
+        client.assert(data.length > 0, "Should have trips");
+    });
+%}
+
+### 2. Filter Trips by Category (beach)
+# @name FilterBeachTrips
+GET {{url}}/trips?category=beach
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Filter beach trips", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        if (Array.isArray(data) && data.length > 0) {
+            client.assert(data[0].category === "beach", "Should filter beach category");
+        }
+    });
+%}
+
+### 3. Filter Trips by Category (city)
+# @name FilterCityTrips
+GET {{url}}/trips?category=city
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Filter city trips", () => {
+        client.assert(response.status === 200, "Expected 200");
+    });
+%}
+
+### 4. Get Trip by ID (with packing items from external API)
+# @name GetTripById
+GET {{url}}/trips/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Get trip by ID with packing items", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.id, "Trip should have ID");
+        client.assert(data && data.name, "Trip should have name");
+        client.assert(data && data.category, "Trip should have category");
+        client.assert(data && data.guides, "Trip should have guides");
+        client.assert(data && data.packingItems, "Trip should have packing items from API");
+    });
+%}
+
+### 5. Get Non-Existent Trip (404)
+# @name GetNonExistentTrip
+GET {{url}}/trips/9999
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("Non-existent trip returns 404", () => {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+#######################################################################
+# CREATE OPERATIONS
+#######################################################################
+
+### 6. Create New Trip
+# @name CreateTrip
+POST {{url}}/trips
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Sahara Desert Adventure",
+  "startTime": "2025-11-15T08:00:00Z",
+  "endTime": "2025-11-22T20:00:00Z",
+  "locationCoordinates": "25.0000,5.0000",
+  "price": 18500.0,
+  "category": "forest"
+}
+
+> {%
+    client.test("Create trip successful", () => {
+        client.assert(response.status === 201, "Expected 201 Created");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data && data.id, "Created trip should have ID");
+        client.assert(data.name === "Sahara Desert Adventure", "Name should match");
+        // Save the new trip ID for later tests
+        if (data && data.id) {
+            client.global.set("new_trip_id", data.id);
+        }
+    });
+%}
+
+### 7. Create Trip with Missing Required Field (validation error)
+# @name CreateInvalidTrip
+POST {{url}}/trips
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "startTime": "2025-11-15T08:00:00Z",
+  "endTime": "2025-11-22T20:00:00Z",
+  "price": 18500.0
+}
+
+> {%
+    client.test("Missing required field returns 400", () => {
+        client.assert(response.status === 400, "Expected 400 Bad Request");
+    });
+%}
+
+#######################################################################
+# UPDATE OPERATIONS
+#######################################################################
+
+### 8. Update Trip
+# @name UpdateTrip
+PUT {{url}}/trips/2
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Barcelona Updated - Art and Architecture",
+  "startTime": "2025-07-10T09:00:00Z",
+  "endTime": "2025-07-15T20:00:00Z",
+  "locationCoordinates": "41.3874,2.1686",
+  "price": 9000.0,
+  "category": "city"
+}
+
+> {%
+    client.test("Update trip successful", () => {
+        client.assert(response.status === 200, "Expected 200");
+        let data = response.body;
+        if (typeof data === "string") { try { data = JSON.parse(data); } catch(e) {} }
+        client.assert(data.price === 9000.0, "Price should be updated");
+    });
+%}
+
+### 9. Update Non-Existent Trip (404)
+# @name UpdateNonExistentTrip
+PUT {{url}}/trips/9999
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Test Trip",
+  "startTime": "2025-11-15T08:00:00Z",
+  "endTime": "2025-11-22T20:00:00Z",
+  "locationCoordinates": "0,0",
+  "price": 1000.0,
+  "category": "beach"
+}
+
+> {%
+    client.test("Update non-existent trip returns 404", () => {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+#######################################################################
+# DELETE OPERATIONS (ADMIN only)
+#######################################################################
+
+### 10. USER tries to delete (should be 403 Forbidden)
+# @name UserDeleteForbidden
+DELETE {{url}}/trips/1
+Authorization: Bearer {{user_token}}
+
+> {%
+    client.test("USER cannot delete trips", () => {
+        client.assert(response.status === 403, "Expected 403 Forbidden");
+    });
+%}
+
+### 11. ADMIN deletes trip (should work)
+# @name AdminDeleteTrip
+DELETE {{url}}/trips/{{new_trip_id}}
+Authorization: Bearer {{admin_token}}
+
+> {%
+    client.test("ADMIN can delete trips", () => {
+        client.assert([204, 404].includes(response.status), 
+            "Expected 204 No Content or 404 if already deleted");
+    });
+%}
+
+#######################################################################
+# SUMMARY
+#######################################################################
+
+### Test Coverage:
+### ✅ Get all trips
+### ✅ Filter by category
+### ✅ Get trip by ID (with packing items)
+### ✅ Create new trip
+### ✅ Validation on create
+### ✅ Update trip
+### ✅ Delete trip (role-based)
+### ✅ Error handling (404, 400, 403)
