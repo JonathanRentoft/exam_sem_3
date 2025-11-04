@@ -10,7 +10,7 @@ import app.exceptions.ApiException;
 import app.exceptions.ExceptionHandler;
 import app.routes.Routes;
 import app.security.JwtUtil;
-import app.services.PackingApiClient;
+import app.services.SkillStatsApiClient;
 import app.utils.Populator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -39,7 +39,7 @@ public class ApplicationConfig {
         UserDAO userDAO = new UserDAO(emf);
 
         // Initialize services
-        PackingApiClient packingApiClient = new PackingApiClient();
+        SkillStatsApiClient packingApiClient = new SkillStatsApiClient();
         JwtUtil jwtUtil = new JwtUtil(SECRET_KEY);
 
         // Initialize controllers
