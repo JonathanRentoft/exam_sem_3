@@ -1,8 +1,5 @@
 package app;
 
-import app.controllers.GuideController;
-import app.controllers.SecurityController;
-import app.controllers.TripController;
 import app.dao.UserDAO;
 import app.routes.Routes;
 import app.security.JwtUtil;

@@ -1,8 +1,5 @@
 package app.routes;
 
-import app.controllers.GuideController;
-import app.controllers.SecurityController;
-import app.controllers.TripController;
 import app.exceptions.ExceptionHandler;
 import app.security.JwtUtil;
 import app.security.Roles;
