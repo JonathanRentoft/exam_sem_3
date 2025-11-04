@@ -1,5 +1,8 @@
 package app.routes;
 
+import app.controllers.CandidateController;
+import app.controllers.ReportController;
+import app.controllers.SecurityController;
 import app.exceptions.ExceptionHandler;
 import app.security.JwtUtil;
 import app.security.Roles;
@@ -18,17 +21,17 @@ public class Routes {
         ADMIN
     }
 
-    public static void configureRoutes(Javalin app, TripController tripController,
-                                        GuideController guideController,
-                                        SecurityController securityController,
-                                        JwtUtil jwtUtil) {
+    public static void configureRoutes(Javalin app, CandidateController candidateController,
+                                       ReportController reportController,
+                                       SecurityController securityController,
+                                       JwtUtil jwtUtil) {
 
-        // Configure access manager for JWT authentication
+        // jwt token validation happens here before routes are executed
         app.beforeMatched(ctx -> {
             Set<RouteRole> routeRoles = ctx.routeRoles();
-            
+
             if (routeRoles.contains(Role.ANYONE)) {
-                return; // Public endpoints
+                return;
             }
 
             String authHeader = ctx.header("Authorization");
@@ -40,7 +43,7 @@ public class Routes {
             String token = authHeader.substring(7);
             try {
                 Set<String> roles = jwtUtil.extractRoles(token);
-                
+
                 if (routeRoles.contains(Role.ADMIN) && !roles.contains(Roles.ADMIN.name())) {
                     ctx.status(403).json(new ExceptionHandler.ErrorResponse(403, "Forbidden: Admin access required")).skipRemainingHandlers();
                     return;
@@ -54,25 +57,19 @@ public class Routes {
             }
         });
 
-        // Public endpoints
+        // login and register are open to everyone
         app.post("/api/login", securityController::login, Role.ANYONE);
         app.post("/api/register", securityController::register, Role.ANYONE);
 
-        // Trip endpoints (protected)
-        app.get("/api/trips", tripController::getAllTrips, Role.USER);
-        app.get("/api/trips/{id}", tripController::getTripById, Role.USER);
-        app.post("/api/trips", tripController::createTrip, Role.USER);
-        app.put("/api/trips/{id}", tripController::updateTrip, Role.USER);
-        app.delete("/api/trips/{id}", tripController::deleteTrip, Role.ADMIN);
-        app.put("/api/trips/{tripId}/guides/{guideId}", tripController::addGuideToTrip, Role.USER);
-        app.get("/api/trips/guides/totalprice", tripController::getGuidesTotalPrice, Role.USER);
-        app.get("/api/trips/{id}/packing/weight", tripController::getTripPackingWeight, Role.USER);
+        // candidate endpoints need authentication
+        app.get("/api/candidates", candidateController::getAllCandidates, Role.USER);
+        app.get("/api/candidates/{id}", candidateController::getCandidateById, Role.USER);
+        app.post("/api/candidates", candidateController::createCandidate, Role.USER);
+        app.put("/api/candidates/{id}", candidateController::updateCandidate, Role.USER);
+        app.delete("/api/candidates/{id}", candidateController::deleteCandidate, Role.ADMIN);
+        app.put("/api/candidates/{candidateId}/skills/{skillId}", candidateController::addSkillToCandidate, Role.USER);
 
-        // Guide endpoints (protected)
-        app.get("/api/guides", guideController::getAllGuides, Role.USER);
-        app.get("/api/guides/{id}", guideController::getGuideById, Role.USER);
-        app.post("/api/guides", guideController::createGuide, Role.USER);
-        app.put("/api/guides/{id}", guideController::updateGuide, Role.USER);
-        app.delete("/api/guides/{id}", guideController::deleteGuide, Role.ADMIN);
+        // report endpoint for analytics
+        app.get("/api/reports/candidates/top-by-popularity", reportController::getTopCandidateByPopularity, Role.USER);
     }
 }
