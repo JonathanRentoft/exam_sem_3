@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class JwtUtil {
     private final Algorithm algorithm;
-    private final String issuer = "trip-planning-api";
+    private final String issuer = "candidate-matcher-api";
     private final long expirationTime = 3600000; // 1 hour
 
     public JwtUtil(String secret) {
