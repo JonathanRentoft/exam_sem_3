@@ -1,4 +1,5 @@
-### STEP 1: First login to get a fresh token
+###First login to get a fresh token
+
 POST http://localhost:7070/api/login
 Content-Type: application/json
 
@@ -7,15 +8,14 @@ Content-Type: application/json
   "password": "user123"
 }
 
-### STEP 2: Copy the token from above response and paste it below
-### Replace YOUR_TOKEN_HERE with the actual token value (without quotes)
+### Replace TOKEN with the actual token value (without quotes)
 
-@token = YOUR_TOKEN_HERE
+@token = TOKEN
 
 ### Get top candidate by popularity score
 # Returns candidate with highest average skill popularity
 GET http://localhost:7070/api/reports/candidates/top-by-popularity
 Authorization: Bearer {{token}}
 
-### Get top candidate without authentication (should fail with 401)
+### Get top candidate without authentication (should fail)
 GET http://localhost:7070/api/reports/candidates/top-by-popularity
