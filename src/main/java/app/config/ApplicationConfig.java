@@ -1,5 +1,10 @@
 package app.config;
 
+import app.controllers.CandidateController;
+import app.controllers.ReportController;
+import app.controllers.SecurityController;
+import app.dao.CandidateDAO;
+import app.dao.SkillDAO;
 import app.dao.UserDAO;
 import app.exceptions.ApiException;
 import app.exceptions.ExceptionHandler;
@@ -15,68 +20,59 @@ import io.javalin.json.JavalinJackson;
 import jakarta.persistence.EntityManagerFactory;
 
 public class ApplicationConfig {
-    
+
     private static final int DEFAULT_PORT = 7070;
     private static final String SECRET_KEY = getSecretKey();
 
     public static Javalin startServer(int port) {
 
 
-        // Get EntityManagerFactory
         EntityManagerFactory emf = HibernateConfig.getEntityManagerFactory();
 
-        // Populate database with sample data
+        // putting sample data in database so there is something to work with
         Populator.populate(emf);
 
-        // Initialize DAOs
-        TripDAO tripDAO = new TripDAO(emf);
-        GuideDAO guideDAO = new GuideDAO(emf);
+        // creating daos for database operations
+        CandidateDAO candidateDAO = new CandidateDAO(emf);
+        SkillDAO skillDAO = new SkillDAO(emf);
         UserDAO userDAO = new UserDAO(emf);
 
-        // Initialize services
-        SkillStatsApiClient packingApiClient = new SkillStatsApiClient();
+        // external api client and jwt util
+        SkillStatsApiClient skillStatsApiClient = new SkillStatsApiClient();
         JwtUtil jwtUtil = new JwtUtil(SECRET_KEY);
 
-        // Initialize controllers
-        TripController tripController = new TripController(tripDAO, packingApiClient);
-        GuideController guideController = new GuideController(guideDAO);
+        // setting up controllers that handle the requests
+        CandidateController candidateController = new CandidateController(candidateDAO, skillStatsApiClient);
+        ReportController reportController = new ReportController(candidateDAO, skillStatsApiClient);
         SecurityController securityController = new SecurityController(userDAO, jwtUtil);
 
-        // Configure JSON serialization with ZonedDateTime support
+        // setting up json serialization to handle dates correctly
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        
-        // Create and configure Javalin server
+
         Javalin app = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
             config.jsonMapper(new JavalinJackson(objectMapper, true));
-            // Enable route overview - will automatically update when routes are registered
             config.bundledPlugins.enableRouteOverview("/routes", Routes.Role.ANYONE);
         }).start(port);
 
-        // Configure routes with security
-        Routes.configureRoutes(app, tripController, guideController, securityController, jwtUtil);
-        
-        // Add a simple root endpoint that redirects to route overview
+        Routes.configureRoutes(app, candidateController, reportController, securityController, jwtUtil);
+
         app.get("/", ctx -> {
             ctx.redirect("/routes");
         }, Routes.Role.ANYONE);
 
-        // Add global exception handlers
+        // global error handling
         app.exception(ApiException.class, ExceptionHandler::handleApiException);
         app.exception(Exception.class, ExceptionHandler::handleGenericException);
 
-        // Log startup
-        System.out.println(" Trip Planning API started successfully!");
-        System.out.println(" Server running on: http://localhost:" + port);
-        System.out.println(" Route Overview: http://localhost:" + port + "/routes");
-        System.out.println(" API endpoints: http://localhost:" + port + "/api");
-        System.out.println(" Default users:");
-        System.out.println("   - Admin: admin/admin123");
-        System.out.println("   - User: user/user123");
-        System.out.println();
-        System.out.println(" NOTE: Use /routes endpoint to see all available endpoints with authentication requirements.");
+        System.out.println("Server running on: http://localhost:" + port);
+        System.out.println("Route Overview: http://localhost:" + port + "/routes");
+        System.out.println("API endpoints: http://localhost:" + port + "/api");
+        System.out.println("Default users:");
+        System.out.println("  - Admin: admin/admin123");
+        System.out.println("  - User: user/user123");
 
         return app;
     }
@@ -88,27 +84,20 @@ public class ApplicationConfig {
         return startServer(DEFAULT_PORT);
     }
 
-    /**
-     * Stops the Javalin server
-     */
     public static void stopServer(Javalin app) {
         if (app != null) {
             app.stop();
-            System.out.println("✅ Server stopped successfully");
+            System.out.println("Server stopped successfully");
         }
     }
 
-    /**
-     * Gets the JWT secret key from environment variable or uses default
-     * In production, ALWAYS use environment variable!
-     */
+    // getting jwt secret from environment or using default for development
     private static String getSecretKey() {
         String envSecret = System.getenv("JWT_SECRET");
         if (envSecret != null && !envSecret.isEmpty()) {
             return envSecret;
         }
-        // Development fallback - DO NOT use in production!
-        System.out.println("⚠️  WARNING: Using default JWT secret. Set JWT_SECRET environment variable in production!");
+        System.out.println("WARNING: Using default JWT secret. Set JWT_SECRET environment variable in production!");
         return "your-secret-key-change-in-production-min-256-bits";
     }
 
