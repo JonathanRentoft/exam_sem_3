@@ -3,8 +3,6 @@ package app.config;
 import app.controllers.GuideController;
 import app.controllers.SecurityController;
 import app.controllers.TripController;
-import app.dao.GuideDAO;
-import app.dao.TripDAO;
 import app.dao.UserDAO;
 import app.exceptions.ApiException;
 import app.exceptions.ExceptionHandler;

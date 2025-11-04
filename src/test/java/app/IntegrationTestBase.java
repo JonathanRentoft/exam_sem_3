@@ -3,13 +3,11 @@ package app;
 import app.controllers.GuideController;
 import app.controllers.SecurityController;
 import app.controllers.TripController;
-import app.dao.GuideDAO;
-import app.dao.TripDAO;
 import app.dao.UserDAO;
 import app.routes.Routes;
 import app.security.JwtUtil;
 import app.security.Roles;
-import app.services.PackingApiClient;
+import app.services.SkillStatsApiClient;
 import app.entities.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -52,7 +50,7 @@ public class IntegrationTestBase {
         UserDAO userDAO = new UserDAO(emf);
 
         // Initialize services
-        PackingApiClient packingApiClient = new PackingApiClient();
+        SkillStatsApiClient packingApiClient = new SkillStatsApiClient();
         JwtUtil jwtUtil = new JwtUtil(SECRET_KEY);
 
         // Initialize controllers

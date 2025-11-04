@@ -1,6 +1,5 @@
 package app.controllers;
 
-import app.dao.TripDAO;
 import app.exceptions.ApiException;
 import app.services.SkillStatsApiClient;
 import io.javalin.http.Context;

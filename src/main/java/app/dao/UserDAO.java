@@ -29,7 +29,7 @@ public class UserDAO {
             query.setParameter("username", username);
             try {
                 User user = query.getSingleResult();
-                user.getRoles().size(); // Initialize lazy collection
+                user.getRoles().size();
                 return user;
             } catch (NoResultException e) {
                 return null;
@@ -41,7 +41,7 @@ public class UserDAO {
         try (EntityManager em = emf.createEntityManager()) {
             User user = em.find(User.class, id);
             if (user != null) {
-                user.getRoles().size(); // Initialize lazy collection
+                user.getRoles().size();
             }
             return user;
         }

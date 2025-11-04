@@ -1,6 +1,5 @@
 package app.controllers;
 
-import app.dao.GuideDAO;
 import app.dto.GuideDTO;
 import app.entities.Guide;
 import app.exceptions.ApiException;
