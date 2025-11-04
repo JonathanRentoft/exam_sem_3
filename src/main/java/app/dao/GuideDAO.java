@@ -1,6 +1,5 @@
 package app.dao;
 
-import app.entities.Guide;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.TypedQuery;

@@ -1,7 +1,5 @@
 package app.utils;
 
-import app.entities.Guide;
-import app.entities.Trip;
 import app.entities.User;
 import app.security.Roles;
 import jakarta.persistence.EntityManager;

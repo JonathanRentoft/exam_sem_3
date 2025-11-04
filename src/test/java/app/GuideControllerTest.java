@@ -1,6 +1,5 @@
 package app;
 
-import app.dto.GuideDTO;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
 

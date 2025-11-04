@@ -1,9 +1,6 @@
 package app.controllers;
 
 import app.dao.TripDAO;
-import app.dto.TripDTO;
-import app.dto.external.PackingItemDTO;
-import app.entities.Trip;
 import app.exceptions.ApiException;
 import app.services.PackingApiClient;
 import io.javalin.http.Context;
