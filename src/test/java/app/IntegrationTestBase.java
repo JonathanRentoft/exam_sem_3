@@ -1,21 +1,16 @@
 package app;
 
-import app.config.HibernateConfig;
 import app.controllers.GuideController;
 import app.controllers.SecurityController;
 import app.controllers.TripController;
 import app.dao.GuideDAO;
 import app.dao.TripDAO;
 import app.dao.UserDAO;
-import app.dto.TokenDTO;
-import app.dto.UserDTO;
 import app.routes.Routes;
 import app.security.JwtUtil;
 import app.security.Roles;
 import app.services.PackingApiClient;
 import app.entities.User;
-import app.entities.Guide;
-import app.entities.Trip;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

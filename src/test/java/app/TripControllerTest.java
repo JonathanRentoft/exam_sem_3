@@ -1,7 +1,5 @@
 package app;
 
-import app.dto.TripDTO;
-import app.dto.UserDTO;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
 
