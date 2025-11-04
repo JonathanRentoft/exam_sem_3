@@ -67,19 +67,12 @@ public class ApplicationConfig {
         app.exception(ApiException.class, ExceptionHandler::handleApiException);
         app.exception(Exception.class, ExceptionHandler::handleGenericException);
 
-        System.out.println("Server running on: http://localhost:" + port);
         System.out.println("Route Overview: http://localhost:" + port + "/routes");
         System.out.println("API endpoints: http://localhost:" + port + "/api");
-        System.out.println("Default users:");
-        System.out.println("  - Admin: admin/admin123");
-        System.out.println("  - User: user/user123");
 
         return app;
     }
-
-    /**
-     * Starts the server on the default port
-     */
+     //Starts the server on the default port
     public static Javalin startServer() {
         return startServer(DEFAULT_PORT);
     }
