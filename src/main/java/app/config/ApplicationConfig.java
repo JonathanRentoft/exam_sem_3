@@ -84,13 +84,6 @@ public class ApplicationConfig {
         return startServer(DEFAULT_PORT);
     }
 
-    public static void stopServer(Javalin app) {
-        if (app != null) {
-            app.stop();
-            System.out.println("Server stopped successfully");
-        }
-    }
-
     // getting jwt secret from environment or using default for development
     private static String getSecretKey() {
         String envSecret = System.getenv("JWT_SECRET");

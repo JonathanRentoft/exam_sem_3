@@ -1,0 +1,108 @@
+
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0cmlwLXBsYW5uaW5nLWFwaSIsInN1YiI6ImFkbWluIiwidXNlcklkIjoxLCJyb2xlcyI6WyJBRE1JTiIsIlVTRVIiXSwiaWF0IjoxNzYyMjQ3NTgwLCJleHAiOjE3NjIyNTExODB9._quj2r4idBRx8fO1djcWdFukLc5NZ6T4kL51EmAcRjw
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0cmlwLXBsYW5uaW5nLWFwaSIsInN1YiI6InVzZXIiLCJ1c2VySWQiOjIsInJvbGVzIjpbIlVTRVIiXSwiaWF0IjoxNzYyMjQ3NjQ3LCJleHAiOjE3NjIyNTEyNDd9.ruglqkUlGwuh_V61TfmvjRiy6Ox9bbf8pYsIPopwL4c
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ0cmlwLXBsYW5uaW5nLWFwaSIsInN1YiI6InVzZXIiLCJ1c2VySWQiOjIsInJvbGVzIjpbIlVTRVIiXSwiaWF0IjoxNzYyMjQ3NjQ3LCJleHAiOjE3NjIyNTEyNDd9.ruglqkUlGwuh_V61TfmvjRiy6Ox9bbf8pYsIPopwL4c
+
+### Get all candidates
+GET http://localhost:7070/api/candidates
+Authorization: Bearer {{token}}
+
+### Get all candidates without token (should fail with 401)
+GET http://localhost:7070/api/candidates
+
+### Get candidates filtered by PROG_LANG category
+GET http://localhost:7070/api/candidates?category=PROG_LANG
+Authorization: Bearer {{token}}
+
+### Get candidates filtered by DB category
+GET http://localhost:7070/api/candidates?category=DB
+Authorization: Bearer {{token}}
+
+### Get candidates filtered by FRAMEWORK category
+GET http://localhost:7070/api/candidates?category=FRAMEWORK
+Authorization: Bearer {{token}}
+
+### Get candidate by ID (with enriched skill data)
+GET http://localhost:7070/api/candidates/1
+Authorization: Bearer {{token}}
+
+### Get candidate by ID 2
+GET http://localhost:7070/api/candidates/2
+Authorization: Bearer {{token}}
+
+### Get candidate by ID 3
+GET http://localhost:7070/api/candidates/3
+Authorization: Bearer {{token}}
+
+### Get non-existent candidate (should return 404)
+GET http://localhost:7070/api/candidates/999
+Authorization: Bearer {{token}}
+
+### Create new candidate
+POST http://localhost:7070/api/candidates
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "New Candidate",
+  "phone": "+45 11 22 33 44",
+  "education": "Computer Science"
+}
+
+### Create candidate with missing name (should fail with 400)
+POST http://localhost:7070/api/candidates
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "phone": "+45 11 22 33 44",
+  "education": "Computer Science"
+}
+
+### Update candidate
+PUT http://localhost:7070/api/candidates/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Candidate Name",
+  "phone": "+45 99 88 77 66",
+  "education": "Updated Education"
+}
+
+### Update non-existent candidate (should return 404)
+PUT http://localhost:7070/api/candidates/999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Name",
+  "phone": "+45 99 88 77 66",
+  "education": "Updated Education"
+}
+
+### Delete candidate as USER (should fail with 403)
+DELETE http://localhost:7070/api/candidates/3
+Authorization: Bearer {{userToken}}
+
+### Delete candidate as ADMIN (replace {{adminToken}} with admin JWT)
+DELETE http://localhost:7070/api/candidates/3
+Authorization: Bearer {{adminToken}}
+
+### Delete non-existent candidate (should return 404)
+DELETE http://localhost:7070/api/candidates/999
+Authorization: Bearer {{adminToken}}
+
+### Add skill to candidate
+# Adds skill with ID 3 to candidate with ID 2
+PUT http://localhost:7070/api/candidates/2/skills/3
+Authorization: Bearer {{token}}
+
+### Add another skill to candidate
+# Adds skill with ID 4 to candidate with ID 1
+PUT http://localhost:7070/api/candidates/1/skills/4
+Authorization: Bearer {{token}}
+
+### Add skill to non-existent candidate (should fail)
+PUT http://localhost:7070/api/candidates/999/skills/1
+Authorization: Bearer {{token}}
