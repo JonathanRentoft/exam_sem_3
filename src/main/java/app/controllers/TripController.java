@@ -2,7 +2,7 @@ package app.controllers;
 
 import app.dao.TripDAO;
 import app.exceptions.ApiException;
-import app.services.PackingApiClient;
+import app.services.SkillStatsApiClient;
 import io.javalin.http.Context;
 
 import java.util.HashMap;
@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 
 public class TripController {
     private final TripDAO tripDAO;
-    private final PackingApiClient packingApiClient;
+    private final SkillStatsApiClient packingApiClient;
 
-    public TripController(TripDAO tripDAO, PackingApiClient packingApiClient) {
+    public TripController(TripDAO tripDAO, SkillStatsApiClient packingApiClient) {
         this.tripDAO = tripDAO;
         this.packingApiClient = packingApiClient;
     }
