@@ -26,15 +26,15 @@ Som systemadministrator vil jeg konfigurere database forbindelsen og entity mana
 - Systemet skal initialisere med sample data via en Populator klasse
 - Skills skal have categories som enum
 
-**Beslutninger:**
+**Beslutninger/tanker:**
 
-1. **Valg af enum til skill categories:** Jeg har besluttet at bruge en enum (SkillCategory) i stedet for en separat entity klasse, fordi kategorierne er faste værdier der ikke skal ændres dynamisk. Dette gør koden simplere og undgår unødvendige database kald.
+1. Jeg har besluttet at bruge en enum (SkillCategory) i stedet for en separat entity klasse, fordi kategorierne er faste værdier der ikke skal ændres dynamisk. Dette gør koden simplere og undgår unødvendige database kald.
 
-2. **Mange-til-mange relation mellem Candidate og Skill:** Jeg har valgt at placere @JoinTable annotationen på Candidate entiteten i stedet for Skill. Dette betyder at Candidate "ejer" relationen, hvilket giver mening fordi vi typisk tilføjer skills til kandidater, ikke omvendt.
+2. Jeg har valgt at placere @JoinTable annotationen på Candidate entiteten i stedet for Skill. Dette betyder at Candidate "ejer" relationen, hvilket giver mening fordi vi typisk tilføjer skills til kandidater, ikke omvendt.
 
-3. **Bidirectional relationship med addSkill metode:** Eftersom hibernate nogle gange har problemer med at synkronisere begge sider af en relation, har jeg lavet en addSkill metode i Candidate der opdaterer begge sider. Dette sikrer at relationen altid er konsistent.
+3. tilføjet Bidirectional relationship med addSkill metode. Eftersom hibernate nogle gange har problemer med at synkronisere begge sider af en relation, har jeg lavet en addSkill metode i Candidate der opdaterer begge sider. Dette sikrer at relationen altid er konsistent.
 
-4. **Slug felt på Skill entity:** Jeg har tilføjet et slug felt til Skill for at matche med den eksterne API. Dette kunne også være gjort med en mapping metode, men at have det direkte på entiteten var nemmere. 
+4. Jeg har tilføjet et slug felt til Skill for at matche med den eksterne API. Dette kunne også være gjort med en mapping metode, men at have det direkte på entiteten var nemmere. 
 
 ### US-2: DAO implementation med CRUD operationer
 
@@ -46,13 +46,13 @@ Som udvikler vil jeg oprette, læse, opdatere og slette kandidat- og skill-recor
 - SkillDAO implementerer basic CRUD
 - DTOs bruges til al dataudveksling mellem lag
 
-**Beslutninger:**
+**Beslutninger/tanker:**
 
-1. **Interface struktur med IDao:** Jeg har lavet en generisk IDao interface med basis CRUD metoder, og så ICandidateDao der extender den. Dette er nok en smule overkill for et lille projekt, men er lavet for at vise viser at jeg forstår interfaces og generics.
+1. Jeg har lavet en generisk IDao interface med basis CRUD metoder, og så ICandidateDao der extender den. Dette er nok en smule overkill for et lille projekt, men er lavet for at vise viser at jeg forstår interfaces og generics.
 
-2. **Separat metode til addSkillToCandidate:** Selvom jeg kunne opdatere en kandidats skills gennem update metoden, har jeg lavet en separat addSkillToCandidate metode. Dette gør intentionen mere klar og giver mulighed for at håndtere fejl specifikt for denne operation.
+2. Selvom jeg kunne opdatere en kandidats skills gennem update metoden, har jeg lavet en separat addSkillToCandidate metode. Dette gør intentionen mere klar og giver mulighed for at håndtere fejl specifikt for denne operation.
 
-3. **Ingen exception handling i DAO:** Jeg lader exceptions fra EntityManager boble op til controlleren i stedet for at håndtere dem i DAO'en. Dette holder DAO laget simpelt men betyder at controlleren skal håndtere database fejl.
+3. Jeg lader exceptions fra EntityManager boble op til controlleren i stedet for at håndtere dem i DAO'en. Dette holder DAO laget simpelt men betyder at controlleren skal håndtere database fejl.
 
 ### US-3: REST endpoints til kandidat management
 
@@ -67,13 +67,13 @@ Som REST API consumer vil jeg håndtere kandidater gennem HTTP endpoints, så je
 - DELETE /candidates/{id} sletter en kandidat
 - PUT /candidates/{candidateId}/skills/{skillId} linker en eksisterende skill til en kandidat
 
-**Beslutninger:**
+**Beslutninger/tanker:**
 
-1. **Validation kun i controlleren:** Jeg validerer kun at name er udfyldt ved oprettelse. Mere omfattende validering ville være bedre men tager længerer tid.
+1. Jeg validerer kun at name er udfyldt ved oprettelse i controlleren. Mere omfattende validering ville være bedre men tager længerer tid.
 
-2. **Status codes efter REST convention:** Jeg bruger 201 Created ved oprettelse, 204 No Content ved sletning, osv. Jeg følger REST best practices men kræver self at man kender standarderne.
+2. Jeg bruger statuskode 201 Created ved oprettelse, 204 No Content ved sletning, osv. Jeg følger REST best practices men kræver self at man kender standarderne.
 
-3. **Ingen pagination på GET /candidates:** For at holde det simpelt har jeg ikke implementeret pagination. Dette betyder at hvis der er tusindvis af kandidater, vil de alle blive returneret, hvilket kan være langsomt.
+3. For at holde det simpelt og grundet tidspres har jeg ikke implementeret pagination. Dette betyder at hvis der er tusindvis af kandidater, vil de alle blive returneret, hvilket kan være langsomt.
 ### US-4: Filtrering af kandidater efter skill kategori
 
 **User Story:**
@@ -82,11 +82,11 @@ Som recruiter vil jeg se og filtrere kandidater baseret på skill kategori, så 
 **Acceptkriterier:**
 - GET /candidates?category={category} filtrerer kandidater baseret på deres skills' kategori ved hjælp af JPA eller streams
 
-**Beslutninger:**
+**Beslutninger/tanker:**
 
-1. **Enum validering:** Jeg konverterer category parameteren til SkillCategory enum og fanger IllegalArgumentException hvis den er invalid. Dette giver en god fejlbesked men er måske ikke den mest elegante løsning.
+1. Jeg konverterer category parameteren til SkillCategory enum og fanger IllegalArgumentException hvis den er invalid. Dette giver en god fejlbesked men er måske ikke den mest elegante løsning.
 
-2. **Case insensitive kategori matching:** Jeg har valgt at bruge toUpperCase() på category parameteren så både "prog_lang" og "PROG_LANG" virker. Dette gør API'en mere brugervenlig men kan skjule typos.
+2. Jeg har valgt at bruge toUpperCase() på category parameteren så både "prog_lang" og "PROG_LANG" virker. Dette gør API'en mere brugervenlig men kan skjule typos.
 
 
 ### US-5: Skill enrichment med ekstern API
@@ -100,13 +100,13 @@ Som recruiter vil jeg se market insights (popularity og salary) for hver kandida
 - Hvis kandidaten ikke har skills returneres tom liste
 - Hvis en skill er ukendt i ekstern API returneres den uden enrichment data
 
-**Beslutninger:**
+**Beslutninger/tanker:**
 
-1. **Enrichment kun ved GET by ID:** Jeg enricher kun skills når man henter en enkelt kandidat, ikke når man henter alle kandidater. Dette reducerer antallet af API kald men betyder derfor at skill data ikke er komplet i listen.
+1. Jeg enricher kun skills når man henter en enkelt kandidat, ikke når man henter alle kandidater. Dette reducerer antallet af API kald men betyder derfor at skill data ikke er komplet i listen.
 
-2. **Graceful fallback ved API fejl:** Hvis den eksterne API fejler, returnerer jeg bare skills uden enrichment data i stedet for at fejle hele requesten. Dette gør systemet mere robust men skjuler måske problemer.
+2. Hvis den eksterne API fejler, returnerer jeg bare skills uden enrichment data i stedet for at fejle hele requesten. Dette gør systemet mere robust men skjuler måske problemer.
 
-3. **Matching med slug i Java:** Jeg matcher local skills med API data ved at sammenligne slug i Java kode. Dette kunne også gøres mere effektivt med en Map istedet, men et nested loop er simpelt og fungerer fint for få skills.
+3. Jeg matcher local skills med API data ved at sammenligne slug i Java kode. Dette kunne også gøres mere effektivt med en Map istedet, men et nested loop er simpelt og fungerer fint for få skills.
 
 ### US-6: Top kandidat rapport
 
@@ -116,13 +116,13 @@ Som analyst vil jeg se kandidaten med højeste gennemsnitlige popularity score, 
 **Acceptkriterier:**
 - Endpoint: GET /reports/candidates/top-by-popularity returnerer JSON med kandidatens ID og gennemsnitlige popularity score
 
-**Beslutninger under implementering:**
+**Beslutninger/tanker:**
 
-1. **For loop i stedet for streams:** Jeg bruger en traditionel for loop til at iterere gennem kandidater i stedet for streams. Dette er mindre moderne men lettere at debugge.
+1. Jeg bruger en traditionel for loop til at iterere gennem kandidater i stedet for streams. Dette er naturligvis ikke optimalt men var lettere at debugge i momentet. 
 
-2. **Eager enrichment af alle kandidater:** Jeg enricher alle kandidaters skills for at beregne gennemsnittet. Dette er ineffektivt hvis der er mange kandidater, men det er den simpleste løsning der virker.
+2. Jeg enricher alle kandidaters skills for at beregne gennemsnittet. Dette er ineffektivt hvis der er mange kandidater, men det var en simpel løsning der virker.
 
-3. **Skip kandidater uden skills:** Jeg springer kandidater over hvis de ikke har skills eller hvis ingen af deres skills har popularity data. Dette undgår division by zero men betyder at kandidaten ikke inkluderes i rapporten.
+3. Jeg springer kandidater over hvis de ikke har skills eller hvis ingen af deres skills har popularity data. Dette undgår division by zero men betyder at kandidaten ikke inkluderes i rapporten.
 
 ### US-7: Automated testing
 
@@ -134,17 +134,17 @@ Som tester vil jeg have automatiserede tests for alle REST endpoints, så applik
 - Tests setup mock data og verificerer JSON responses og status codes
 - Kandidat-by-ID tests bekræfter at enrichment data er inkluderet
 
-**Beslutninger under implementering:**
+**Beslutninger/tanker:**
 
-1. **H2 in-memory database til tests:** Jeg bruger H2 i stedet for PostgreSQL til tests. Dette gør tests hurtigere og uafhængige af ekstern database.
+1. Jeg bruger H2 i stedet for PostgreSQL til tests. Dette gør tests hurtigere og uafhængige af ekstern database.
 
-2. **Base test class med setup metode:** Jeg har lavet en IntegrationTestBase klasse med fælles setup kode.
+2. Jeg har lavet en IntegrationTestBase klasse med fælles setup kode.
 
-3. **Tests bruger rigtige HTTP kald:** Jeg bruger REST Assured til at lave rigtige HTTP requests i stedet for at mocke controlleren. Dette giver mere realistiske tests men er langsommere.
+3. Jeg bruger REST Assured til at lave rigtige HTTP requests i stedet for at mocke controlleren. Dette giver mere realistiske tests men er langsommere.
 
-4. **Separate test tokens for user og admin:** Jeg opretter tokens i setupTest metoden og gemmer dem som felter. Dette gør tests hurtigere men betyder at hvis token logikken fejler, fejler alle tests.
+4. Jeg opretter tokens i setupTest metoden og gemmer dem som felter. Dette gør tests hurtigere men betyder at hvis token logikken fejler, fejler alle tests.
 
-5. **Begrænsede negative tests:** Jeg har kun få tests for fejl cases som 404 og 401. Flere negative tests ville være bedre men tager længere tid at skrive.
+5. Jeg har kun få tests for fejl cases som 404 og 401. Flere negative tests ville være bedre men tager længere tid at skrive.
 
 ### US-8: JWT authentication og role-based access control
 
@@ -157,15 +157,13 @@ Som secure API consumer vil jeg logge ind og tilgå protected endpoints ved hjæ
 - Unauthorized requests returnerer 401 Unauthorized
 - Tests verificerer secure access behavior
 
-**Beslutninger under implementering:**
+**Beslutninger/tanker:**
 
-1. **beforeMatched hook til token validation:** Jeg validerer JWT tokens i en beforeMatched hook i stedet for i hver controller metode. Dette centraliserer security logikken men betyder også at alle routes skal have en role annotation.
+1. Jeg validerer JWT tokens i en beforeMatched hook i stedet for i hver controller metode. Dette centraliserer security logikken.
 
-2. **Role.ANYONE for public endpoints:** Jeg bruger Role.ANYONE som en marker rolle for endpoints der ikke kræver authentication.
+2. Jeg bruger Role.ANYONE som en marker rolle for endpoints der ikke kræver authentication.
 
-3. **Admin role kan alt:** Admin rolle har adgang til både user og admin endpoints. Dette er implementeret ved at admins får begge roles ved oprettelse, hvilket er den simpeleste løsning jeg kunne komme på. 
-
-## Kørselsvejledning
+3. Admin rolle har adgang til både user og admin endpoints. Dette er implementeret ved at admins får begge roles ved oprettelse, hvilket er den simpeleste løsning jeg kunne komme på.
 
 ### Forudsætninger
 - Java 17 eller nyere
