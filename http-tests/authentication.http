@@ -1,0 +1,35 @@
+### Login as user
+POST http://localhost:7070/api/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user123"
+}
+
+### Login as admin
+POST http://localhost:7070/api/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### Register new user
+POST http://localhost:7070/api/register
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "password": "password123"
+}
+
+### Login with invalid credentials (should fail)
+POST http://localhost:7070/api/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "wrongpassword"
+}
