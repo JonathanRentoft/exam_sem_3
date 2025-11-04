@@ -1,4 +1,18 @@
 # Candidate Matcher Application - Eksamensbesvarelse
+### Endpoint tabel
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/login` | POST | 🔓 None | Authenticer bruger |
+| `/register` | POST | 🔓 None | Opret ny bruger |
+| `/candidates` | GET | 🔒 USER | Hent alle kandidater |
+| `/candidates?category=X` | GET | 🔒 USER | Hent filtreret kandidater |
+| `/candidates/{id}` | GET | 🔒 USER | Hent kandidat med enriched skills |
+| `/candidates` | POST | 🔒 USER | Opret kandidat |
+| `/candidates/{id}` | PUT | 🔒 USER | Opdater kandidat |
+| `/candidates/{id}` | DELETE | 🔒 ADMIN | Slet kandidat |
+| `/candidates/{cId}/skills/{sId}` | PUT | 🔒 USER | Tilføj skill til kandidat |
+| `/reports/candidates/top-by-popularity` | GET | 🔒 USER | Hent top kandidat |
 
 ## Status
 
