@@ -134,12 +134,12 @@ class SkillDAOTest {
         assertEquals("New description", result.getDescription());
     }
 
-    @Test
+
     @DisplayName("Delete skill should remove from database")
     void testDelete() {
     }
 
-    @Test
+
     @DisplayName("Delete non-existent skill should not throw exception")
     void testDeleteNotFound() {
     }
