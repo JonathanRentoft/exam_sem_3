@@ -62,7 +62,7 @@ public class Routes {
         app.post("/api/register", securityController::register, Role.ANYONE);
 
         // candidate endpoints need authentication
-        app.get("/api/candidates", candidateController::getAllCandidates, Role.USER);
+        app.get("/api/candidates", candidateController::getAllCandidates, Role.ANYONE);
         app.get("/api/candidates/{id}", candidateController::getCandidateById, Role.USER);
         app.post("/api/candidates", candidateController::createCandidate, Role.USER);
         app.put("/api/candidates/{id}", candidateController::updateCandidate, Role.USER);

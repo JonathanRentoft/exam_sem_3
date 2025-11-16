@@ -2,12 +2,16 @@ package app.exceptions;
 
 import io.javalin.http.Context;
 
+import java.util.logging.Logger;
+
 // Global exception handler for the application
 public class ExceptionHandler {
 
     //Handles ApiException and returns proper JSON error response
     public static void handleApiException(ApiException e, Context ctx) {
+
         ctx.status(e.getCode()).json(new ErrorResponse(e.getCode(), e.getMessage()));
+
     }
 
     // Handles generic exceptions and returns 500 error
